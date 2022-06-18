@@ -80,7 +80,11 @@ class PersistentBankAccount {
         Effect.reply(replyTo)(GetBankAccountResponse(Some(state)))
     }
   // event handler => update state
-  val eventHandler: (BankAccount, Event) => BankAccount = ???
+  val eventHandler: (BankAccount, Event) => BankAccount = (state, event) =>
+    event match {
+      case BankAccountCreated(bankAccount) => bankAccount
+      case BalanceUpdated(amount) => state.copy(balance = state.balance + amount)
+    }
   // state
 
 

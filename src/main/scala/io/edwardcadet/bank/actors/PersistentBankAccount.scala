@@ -1,11 +1,11 @@
-package io.edwardcadet.actors
+package io.edwardcadet.bank.actors
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 
 // a single bank account
-class PersistentBankAccount {
+object PersistentBankAccount {
   /*
     - fault tolerance
     - auditing
@@ -14,25 +14,25 @@ class PersistentBankAccount {
   // commands = messages
   sealed trait Command
 
-  case class CreateBankAccount(user: String,
-                               currency: String,
-                               initialBalance: Double,
-                               replyTo: ActorRef[Response]) extends Command
+  object Commands {
+    case class CreateBankAccount(user: String,
+                                 currency: String,
+                                 initialBalance: Double,
+                                 replyTo: ActorRef[Response]) extends Command
 
-  case class UpdateBalance(id: String,
-                           currency: String,
-                           amount: Double,
-                           replyTo: ActorRef[Response]) extends Command
+    case class UpdateBalance(id: String,
+                             currency: String,
+                             amount: Double,
+                             replyTo: ActorRef[Response]) extends Command
 
-  case class GetBankAccount(id: String, replyTo: ActorRef[Response]) extends Command
+    case class GetBankAccount(id: String, replyTo: ActorRef[Response]) extends Command
+  }
 
   // events = to persist to Cassandra
   trait Event
 
-  // would it be better to just use the account id?
   case class BankAccountCreated(bankAccount: BankAccount) extends Event
 
-  // would it be better to just use the account id?
   case class BalanceUpdated(amount: Double) extends Event
 
   // state
@@ -42,11 +42,16 @@ class PersistentBankAccount {
   // responses
   sealed trait Response
 
-  case class BankAccountCreatedResponse(id: String) extends Response
+  object Responses {
+    case class BankAccountCreatedResponse(id: String) extends Response
 
-  case class BankAccountBalanceUpdatedResponse(maybeBankAccount: Option[BankAccount]) extends Response
+    case class BankAccountBalanceUpdatedResponse(maybeBankAccount: Option[BankAccount]) extends Response
 
-  case class GetBankAccountResponse(maybeBankAccount: Option[BankAccount]) extends Response
+    case class GetBankAccountResponse(maybeBankAccount: Option[BankAccount]) extends Response
+  }
+
+  import Commands._
+  import Responses._
 
   // command handler = message handler => persist an event
   val commandHandler: (BankAccount, Command) => Effect[Event, BankAccount] = (state, command) =>

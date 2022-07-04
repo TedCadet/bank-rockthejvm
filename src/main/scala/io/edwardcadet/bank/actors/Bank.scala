@@ -6,6 +6,7 @@ import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 
 import java.util.UUID
+import scala.util.Failure
 
 object Bank {
 
@@ -47,7 +48,7 @@ object Bank {
               // failed account search
               Effect
                 .persist(AccountNotFound(id))
-                .thenReply(replyTo)(_ => BankAccountBalanceUpdatedResponse(None))
+                .thenReply(replyTo)(_ => BankAccountBalanceUpdatedResponse(Failure(new RuntimeException(("Bank account cannot be found")))))
           }
 
         case getCmd@GetBankAccount(id, replyTo) =>
